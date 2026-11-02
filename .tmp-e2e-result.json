@@ -1,0 +1,320 @@
+[
+  {
+    "name": "01. 实例加载",
+    "pass": true,
+    "evidence": "__snxDebug.step=done | errs=0",
+    "domain": "p0"
+  },
+  {
+    "name": "02. 宽度回归",
+    "pass": true,
+    "evidence": "views=[\"生图\",\"队列\",\"画布\",\"画廊6\",\"对比\"] | 溢出组合=0/20 | 无真实溢出",
+    "domain": "ui"
+  },
+  {
+    "name": "03. 画廊状态过滤",
+    "pass": true,
+    "evidence": "节点(done/pending/error/总)=5/0/1/6 | 画廊卡片=6(图卡=5,占位卡=1) | 破图=0",
+    "domain": "p0"
+  },
+  {
+    "name": "04. 灯箱缩放平移",
+    "pass": true,
+    "evidence": "双击打开灯箱 ✓ | 放大两档:zoom指示 100%→121%,wrap.style=721px 但渲染宽=721(stage sw/cw=721/620) | 拖拽平移 Δscroll=(36,0) | 双击复位后 zoom=100%,scroll=620/620 reset=true",
+    "domain": "p0"
+  },
+  {
+    "name": "05. 模态守卫",
+    "pass": true,
+    "evidence": "删前:节点 total=6,画廊卡片=6 | 画布节点已选中(.snx-ab 可见) | 灯箱已打开 | 灯箱开启态已按 Delete | 灯箱已关闭=true | 删后:节点 total=6,画廊卡片=6,画布选中保持=true",
+    "domain": "p0"
+  },
+  {
+    "name": "06. 画廊交互",
+    "pass": true,
+    "evidence": "hover 后 ops opacity 0→1(测量前预选=1张,已清) | Ctrl+点击第1张=true→标签=\"1 张已选\";第2张=true→标签=\"2 张已选\" | 批量删除弹层=.snx-cfm-backdrop(应用内),原生confirm=0次 | 确认后 done 节点 5→3(删 2 张=true) | Ctrl+Z 撤销后 done=5(复原=true)",
+    "domain": "gallery"
+  },
+  {
+    "name": "07. 右键菜单",
+    "pass": true,
+    "evidence": "菜单出现,项=\"雪夜里的红灯笼特写：一只中国传统的红色纸灯笼挂在檐下打开灯箱下载收藏移入画板画布编辑删除\"",
+    "domain": "gallery"
+  },
+  {
+    "name": "08. 风格芯片互斥",
+    "pass": true,
+    "evidence": "初始.on=[] | 点电影→.on=[\"电影\"] | 再点动漫→.on=[\"动漫\"](互斥=true) | textarea=\"\"含后缀残段=0段 | 再点动漫(清除)→.on=[],textarea=\"\"",
+    "domain": "form"
+  },
+  {
+    "name": "09. 尺寸芯片",
+    "pass": true,
+    "evidence": "默认常亮芯片=[\"1:1\"] | 16:9 芯片存在=true | 点后尺寸显示 2048x1152=true",
+    "domain": "form"
+  },
+  {
+    "name": "10. 回填热键",
+    "pass": true,
+    "evidence": "目标节点 prompt=\"雪夜里的红灯笼特写：一只中国传统的红色纸灯笼挂在檐下，灯笼表\",seed=-1,期望回填尺寸=2048x2048(原图 480x480) | R 回填:灯箱自动关=true,prompt=\"雪夜里的红灯笼特写：一只中国传统的红色纸灯笼挂在檐下，灯笼表\"(期望=\"雪夜里的红灯笼特写：一只中国传统的红色纸灯笼挂在檐下，灯笼表\")匹配=true | P 回填(v12 停留灯箱):切生图后灯箱保持=true,prompt=\"雪夜里的红灯笼特写：一只中国传统的红色纸灯笼挂在檐下，灯笼表\"匹配=true | S 回填(v12 停留灯箱):切生图后灯箱保持=true,seed=-1(期望=-1)匹配=true | D 回填(v12 停留灯箱):切生图后灯箱保持=true,尺寸显示含 2048x2048=true(常亮芯片=\"1:1\")",
+    "domain": "form"
+  },
+  {
+    "name": "11. SnxSelect 键盘",
+    "pass": true,
+    "evidence": "可聚焦=true(初始=\"默认（配置中的模型）\") | ArrowDown 展开=true | 选项=4,高亮 idx 0→1(移动=true),目标项=\"sensenova-u1.5-lite · \" | Enter 后收起=true,按钮标签 \"默认（配置中的模型）\"→\"sensenova-u1.5-lite · 当前可用（文生图/图生图）\"(选中生效=true) | 复原后标签=\"默认（配置中的模型）\"",
+    "domain": "ui"
+  },
+  {
+    "name": "12. 队列清理",
+    "pass": true,
+    "evidence": "「清除已失败」按钮=true,队列失败计数=1,API error=1 | 应用内确认弹层=true(.snx-cfm-backdrop),原生confirm=0次 | 确认后 API error=0(消失=true)",
+    "domain": "form"
+  },
+  {
+    "name": "13. 原生弹窗清零",
+    "pass": true,
+    "evidence": "confirm=0 | prompt=0 | alert=0 | 全程无原生弹窗",
+    "domain": "form"
+  },
+  {
+    "name": "14. 行级回填",
+    "pass": true,
+    "evidence": "基线 2048x2048 与期望相同→先切 16:9,现基线=2048x1152(差异制造=true) | 目标节点 mv37nw2z 原图 480×480,期望回填尺寸=2048x2048;表单基线尺寸=2048x2048 | 参数清单「参数清单」7 行;可回填行=[\"提示词\",\"尺寸\",\"画板\"],纯信息行=[\"负向词\",\"模型\",\"种子\",\"创建\"] | 点「尺寸」行按钮:灯箱保持打开=true,toast=\"已回填种子§已回填尺寸§已清除 1 条失败记录§已回填尺寸\" | 回填后表单尺寸 now=\"2048x2048\"(期望=2048x2048),常亮芯片=[\"1:1\"]",
+    "domain": "recall"
+  },
+  {
+    "name": "15. 决策面板",
+    "pass": true,
+    "evidence": "有提示词 hover:面板=\"将生成 1 张模型 默认（配置中的模型） · 2048x2048目标：画板「红灯笼系列」队列空闲，提交后立即开始\" | 清空后 hover:面板=\"提示词为空\",blocker 行=1,生成按钮 disabled=true | 鼠标移开:面板收起=true",
+    "domain": "panel"
+  },
+  {
+    "name": "16. 对比三模式",
+    "pass": true,
+    "evidence": "选 2 张:模式按钮=3个[\"滑块\",\"并排\",\"叠化\"](默认高亮 idx=0),交换按钮=true | 滑块态:stage类=\"snx-cmp-stage\",分割手柄=true,A层尾=mv37nw2t5foh.png,B层尾=mu6xrvkpj60g.png | 点「并排」:按钮高亮=true,stage类=\"snx-cmp-stage m-side\",手柄消失=true,信息列标签=[\"A · 左\",\"B · 右\"],布局变化=true | 点「交换」:A层尾=mu6xrvkpj60g.png,B层尾=mv37nw2t5foh.png,A/B 互换=true",
+    "domain": "compare"
+  },
+  {
+    "name": "17. 删除引用警告",
+    "pass": true,
+    "evidence": "父节点=mu5hdt3g prompt=\"一只戴墨镜的柴犬，扁平化插画，暖色调配色\",删前节点总数=5 | 确认文案=\"将从画廊与画布移除这些图，可回画布页按 Ctrl+Z 撤销。注意：其中 1 张是其他图的父图（衍生链起点），删除后对应「衍生自」链会断开，子图本身不受影响。\" | 含引用警告(注意/父图/衍生自)=true | 点取消后节点总数 5→5(未真删=true)",
+    "domain": "compare"
+  },
+  {
+    "name": "18. 历史翻阅",
+    "pass": true,
+    "evidence": "lib.recents 现有 1 条 | Ctrl+↑ 后 textarea=\"AUDIT-ERROR-SEED 请忽略\"(期望 recents[0]=\"AUDIT-ERROR-SEED 请忽略\")命中=true | toast=\"已回填尺寸§已清除 1 条失败记录§已回填尺寸§历史 1/1\" | Ctrl+↓ 退出历史:textarea 还原=true",
+    "domain": "recall"
+  },
+  {
+    "name": "19. 画布双击",
+    "pass": true,
+    "evidence": "目标节点=mv37nw2z 中心=(1162,763),与其他节点中心最近距离=207px | 超速双击(两次单击 51ms):灯箱=出现 | 人速双击(间隔 150ms):灯箱=出现,lb-id=mv37nw2z(期望 mv37nw2z)",
+    "domain": "cvfix"
+  },
+  {
+    "name": "20. 多选操作条",
+    "pass": true,
+    "evidence": "Ctrl+A(画布 5 节点):多选操作条=出现,标签=\"已选 5 张\",对齐入口=[\"左对齐\",\"右对齐\",\"顶对齐\",\"底对齐\",\"水平等距分布\",\"垂直等距分布\"] | 右键已选节点 mu5j5evr:菜单=\"灯箱打开新标签打开 下载 在画廊中定位 设为对比 复制图片 提取提示词 回填参数 复制 删除成组 批量下载 适应画面 导出画布 PNG\"",
+    "domain": "cvfix"
+  },
+  {
+    "name": "21. 画布 toast",
+    "pass": true,
+    "evidence": "改接对:A=mu5hdt3g 端口(1222,383) → B=mu6xrvkp(原 parentId=无) | 拖线前清残留 toast,清后 toasts 容器内=0 条 | 拖线改接后 toasts=\"已改接：现在衍生自 已换成圣诞的绿色礼物盒\",含「已改接」=true | 改接 toast 5.5 秒后仍在场=true(toast 5 秒自动消失未生效) | B.parentId 复原:无→无(净变化=0)",
+    "domain": "cvfix"
+  },
+  {
+    "name": "22. 队列行展开",
+    "pass": true,
+    "evidence": "无失败项→拦截 generate 500 造 1 条(不触真实API):seeded,error=1 | 失败行徽章中文=true(徽章文本=失败) | 展开前无详情=true,展开后详情体=true,含错误全文=true,含 模型/尺寸/耗时=true | 测后清除失败:API error=0",
+    "domain": "panel"
+  },
+  {
+    "name": "23. 对话等待生命感",
+    "pass": true,
+    "evidence": "mock 前置:config.baseUrl=http://127.0.0.1:5299/v1,mock 命中数=0 | 第1次发消息:已提交 | pending 卡:ring=true,文本=「SenseNova 生成中 · 已 0s」(0s)→1.6s 后 1s(增长=true) | 响应落地后 pending 消失且卡变结果图=true(mock 命中=1) | 结果卡:prompt 48字(全文 54字,src=mvxl8y1n55iz.png),动作行=[\"回填参数\",\"设为参考图\",\"同参数重抽\",\"插入画布\",\"下载\"]",
+    "domain": "chat"
+  },
+  {
+    "name": "24. 对话卡回填参数",
+    "pass": true,
+    "evidence": "目标卡:prompt 全文 54 字,期望尺寸=2752x1536,动作行含「回填参数」=true | 点「回填参数」后:工作台在=true,表单 prompt 匹配=true(=\"AUDIT-V13 回填与复制验证:一只戴贝雷帽\"),尺寸 2752x1536=true",
+    "domain": "chat"
+  },
+  {
+    "name": "25. 对话卡设为参考图",
+    "pass": true,
+    "evidence": "toast=\"已设为参考图，已切到生图表单\",参考图区 参考图（1/4） 缩略图=1 张,含本卡图(src 匹配)=true | 测后移除参考图=true",
+    "domain": "chat"
+  },
+  {
+    "name": "26. 对话卡同参数重抽",
+    "pass": true,
+    "evidence": "请求体={\"prompt\":\"AUDIT-V13 回填与复制验证:一只戴贝雷帽的柴犬在雪夜里提着红灯笼走过京都的巷子,暖色灯光映在湿石板上\",\"size\":\"2752x1536\",\"model\":\"sensenova-u1.5-lite\"},与原卡一致(prompt+size)=true | 画布 done 6→7(新增=1),新节点=mvxl92ka src=/api/sensenova/image/mvxl92k76lnf.png | toast=\"已按同参数重抽，结果见工作台\"",
+    "domain": "chat"
+  },
+  {
+    "name": "27. 对话卡复制提示词",
+    "pass": true,
+    "evidence": "卡面展示 48 字(截断态)/全文 54 字(>48 截断前提成立=true) | 剪贴板=\"AUDIT-V13 回填与复制验证:一只戴贝雷帽的柴犬在雪夜里提着红灯笼走过京都\"… 与全文相等=true,toast=\"已按同参数重抽，结果见工作台§已复制\"",
+    "domain": "chat"
+  },
+  {
+    "name": "28. 对话灯箱",
+    "pass": true,
+    "evidence": "基线:表单尺寸打回=2048x2048(期望与卡尺寸 2752x1536 不同) | 灯箱头=「参数清单」,参数行=[\"提示词(可回填)\",\"模型(可回填)\",\"尺寸(可回填)\"],动作行=[\"设为参考图\",\"同参数重抽\",\"下载\",\"插入画布\"] | 点「尺寸」行回填:灯箱保持=true,toast=\"已按同参数重抽，结果见工作台§已复制§已回填尺寸，打开工作台生图表单可见\" | 回填后表单尺寸=2752x1536(期望 2752x1536)",
+    "domain": "chatlb"
+  },
+  {
+    "name": "29. 回合尾编号",
+    "pass": true,
+    "evidence": "第1次发消息:已提交(等 agent 回合完成) | 回合尾:tail 图=2 张,角标=[\"1 / 2\",\"2 / 2\"](期望 [\"1 / 2\",\"2 / 2\"],匹配=true) | 点 tail 图开对话灯箱=true",
+    "domain": "chatlb"
+  },
+  {
+    "name": "30. 生成入板",
+    "pass": true,
+    "evidence": "目标画板下拉 初始=\"红灯笼系列\" →选中「红灯笼系列」后=\"红灯笼系列\" | 决策面板目标行=\"目标：画板「红灯笼系列」\"(期望含 画板「红灯笼系列」) | 拦截 500:请求体 prompt 匹配=true,节点 9→10,节点=mvxlaajo/status=error/boardId=mv59ug3joc7d5,boardId=所选=true | 测后清场:清除已失败 error=0,目标画板已回「未分组」,提示词已清",
+    "domain": "wb"
+  },
+  {
+    "name": "31. 队列全历史",
+    "pass": true,
+    "evidence": "最老 done 节点=「一只戴墨镜的柴犬，扁平化插画」(ts=1758000000000),done+error=9 | toggle:off=2 行 → on=开(aria-pressed=true)9 行(≥done+error=true,增长=true) | 旧行:徽章=\"完成\",展开=true,耗时=\"未运行(历史)\" | 关回:rows=2(窗口恢复=true),旧行消失=true",
+    "domain": "wb"
+  },
+  {
+    "name": "32. 对比 3 图",
+    "pass": true,
+    "evidence": "模式组=「对比模式（多图）」:[{\"t\":\"滑块\",\"disabled\":true,\"title\":\"仅支持 2 张对比\",\"on\":false},{\"t\":\"并排\",\"disabled\":false,\"title\":\"多图并排对照\",\"on\":true},{\"t\":\"叠化\",\"disabled\":true,\"title\":\"仅支持 2 张对比\",\"on\":false}];网格=cols-3/3 格 | 点第 2 格:大图 src 跟随=true,焦点格 idx=1",
+    "domain": "wb"
+  },
+  {
+    "name": "33. 并发写保护",
+    "pass": true,
+    "evidence": "基线:server rev=1687,标记卡 A=mvxla0k5 B=mvxl9y7v C=mvxl92ka | A 写入:收藏卡 A → server rev 1687→1688(+1=true),doc.favorite(A)=true | B 携旧 rev 写入:409 toast=「检测到其他会话修改,已加载最新画布」(出现=true),保存指示=「」(元素在场=false) | 409 后以远端为基线:rev=1688(未因失败写+1=true),A 的收藏在=true,B 未落盘的收藏被放弃(doc 内 B.favorite=false) | B 携新 rev 再写(收藏卡 C):点击=true,落盘=true,server rev 1688→1689(+1=true) | 清场:取消收藏 2/2 处,三张标记卡残留 favorite=0(净变化=0)",
+    "domain": "wb"
+  },
+  {
+    "name": "34. 队列取消其他",
+    "pass": true,
+    "evidence": "阶段1:J2-J4 拦截 500 快速失败 → J 节点=3,error=3(需 3) | 阶段3:暂停队列→「重跑失败」确认(应用内)→UI 运行中=1/等待中=3/失败=0(转 pending 成功=true);server doc(rerun 不即时落盘,滞后如实记录)=running 1/pending 0/error 3 | 队列页:概要=[\"1运行中\",\"3等待中\",\"2已完成\",\"0失败\"],「取消其他」按钮=true(禁用=false) | 确认弹层=.snx-cfm-backdrop(应用内),文案=\"取消其他 3 个等待中任务？将取消 3 个等待中的任务（不再开跑）；正在运行的 1 个任务保持不变。被取消任务记为「用户取消」，重跑失败时不会自动复活。取消取消其他\" | 确认后:running=1(仅运行中保留=true),pending=0(清零=true),error=3(3 条用户取消),原生confirm 增量=0 | 收尾:J1 落 500(error=4/4),队列已恢复,清除已失败→J 残留=0(净变化=0)",
+    "domain": "wb"
+  },
+  {
+    "name": "35. 对比网格交换",
+    "pass": true,
+    "evidence": "交换前=[\"a0k3rux0.png\",\"9y7skvhb.png\",\"92k76lnf.png\"],角标=[\"A\",\"B\",\"C\"],按钮title=\"倒序排列当前对比顺序（再点一次恢复）\" | 点「交换」后=[\"92k76lnf.png\",\"9y7skvhb.png\",\"a0k3rux0.png\"],角标=[\"A\",\"B\",\"C\"],倒序=true,首图角标 A→C=true | 再点恢复=true(=[\"a0k3rux0.png\",\"9y7skvhb.png\",\"92k76lnf.png\"])",
+    "domain": "wb"
+  },
+  {
+    "name": "36. 右键菜单新项",
+    "pass": true,
+    "evidence": "目标节点=mvxla0k5,提示词=\"AUDIT-V13 多图编号 B:巷口狸猫\" | 菜单项=[\"灯箱打开\",\"新标签打开\",\"下载\",\"在画廊中定位\",\"设为对比\",\"复制图片\",\"提取提示词\",\"回填参数\",\"复制\",\"删除\",\"适应画面\",\"导出画布 PNG\"] | 复制图片:剪贴板 types=[\"image/png\"],含 image/png=true,toast=\"已取消收藏 1 张§已取消收藏 1 张§已清除 4 条失败记录§已复制图片到剪贴\" | 提取提示词:剪贴板=\"AUDIT-V13 多图编号 B:巷口狸猫\"…,与去💬提示词全等=true | 设为对比:菜单点击=true,对比池选中 0→1(+1=true,池挂载卡数=9),toast=\"已清除 4 条失败记录§已复制图片到剪贴板§已复制完整提示词§已加入对比选择（1/4），切「\" | 在画廊中定位:高亮(.snx-locate)页内捕获={\"h\":233,\"inVp\":true}(800ms 窗,观测器抓拍),落点 settled:画廊视图在=true,卡高=233px,卡在视口内=true",
+    "domain": "menu"
+  },
+  {
+    "name": "37. 批量下载",
+    "pass": true,
+    "evidence": "Ctrl+A:多选条标签=\"已选 9 张\",画布 done 有 src 节点=9(期望下载次数) | 多选右键菜单含「批量下载」=true | 点「批量下载」后:download 事件=9 次(期望=9),toast=\"已复制完整提示词§已加入对比选择（1/4），切「对比」tab 查看§正在画廊中定\"",
+    "domain": "menu"
+  },
+  {
+    "name": "38. 回合尾折叠直通",
+    "pass": true,
+    "evidence": "mock 前置:config.baseUrl=http://127.0.0.1:5299/v1 | 发消息:已提交 | 回合尾图已就绪:src=enova/image/mvxlcn7h1t5f.png,natural=800px(等待期未做任何展开操作) | 不展开直接量:回合尾图渲染高=180px×240px,display=block,visibility=visible,在视口内=true | 对照:折叠头(「已完成…」)在场=1(过程区被宿主折叠而尾图仍可见=直通形态成立)",
+    "domain": "fold"
+  },
+  {
+    "name": "39. 归板跟随",
+    "pass": true,
+    "evidence": "画板就绪:B=「AUDIT-B」(本断言新建),C=「AUDIT-C」(本断言新建) | 前置:画廊回全部=true,目标按钮 \"未分组\"→点「回到跟随画廊」→\"跟随画廊:未分组\",基线目标行=\"目标：跟随画廊:未分组\"(期望 跟随画廊:未分组) | 画廊筛选 B:点击=true,chip 高亮=true | 筛选 B 时目标行=\"目标：跟随画廊:画板「AUDIT-B」\"(期望含 跟随画廊:画板「AUDIT-B」) | 切「全部」:点击=true,chip 高亮=true,目标行=\"目标：跟随画廊:未分组\"(期望 跟随画廊:未分组)",
+    "domain": "board"
+  },
+  {
+    "name": "40. 手动覆盖目标板",
+    "pass": true,
+    "evidence": "基线(跟随态)按钮=\"跟随画廊:画板「AUDIT-B」\" | 下拉选项=[\"跟随画廊:画板「AUDIT-B」\",\"未分组\",\"红灯笼系列\",\"AUDIT-B\",\"AUDIT-C\",\"排序：最近使用（点击改为按名称）\"],点「AUDIT-C」=true,按钮→\"AUDIT-C\",目标行=\"目标：画板「AUDIT-C」\"(期望 画板「AUDIT-C」无跟随前缀) | 画廊切全部→按钮=\"AUDIT-C\",目标行=\"目标：画板「AUDIT-C」\";切回 B→目标行=\"目标：画板「AUDIT-C」\"(均应仍 画板「AUDIT-C」) | 手动态下拉首项=\"回到跟随画廊\",点「回到跟随画廊」=true,按钮→\"跟随画廊:画板「AUDIT-B」\",目标行=\"目标：跟随画廊:画板「AUDIT-B」\"(期望 跟随画廊:画板「AUDIT-B」)",
+    "domain": "board"
+  },
+  {
+    "name": "41. 归板落图放行",
+    "pass": true,
+    "evidence": "mock 上游=在位(baseUrl=http://127.0.0.1:5299/v1) | 放行前:跟随目标行=\"目标：跟随画廊:画板「AUDIT-B」\"(应含 跟随画廊:画板「AUDIT-B」) | 放行后:节点=mvxldpbz/status=done/boardId=mvxldauunoecv(期望 done+boardId=mvxldauunoecv),src=/api/sensenova/image/mvxldrnu0f28.png(服务端图 URL=真实回环) | 画廊 B 筛选下:新卡=在场(高 233px,图=true,视口内=true)(期望被 B 筛选命中=归板 UI 佐证) | 清场:放行节点删除=deleted,新建画板清理=AUDIT-B=deleted(alt 文案=true),AUDIT-C=deleted(alt 文案=true),画廊筛选已回全部",
+    "domain": "board"
+  },
+  {
+    "name": "42. 批量变体拦截",
+    "pass": true,
+    "evidence": "Ctrl+点选 A=true(💬 AUDIT-V14 回合尾…/src=age/mvxlcn7h1t5f.png),B=true(💬 AUDIT-V13 多图编…/src=age/mvxla0k3rux0.png) | 批量条={\"计数\":\"2 张已选\",\"按钮\":\"批量变体\",\"禁用\":false} | 请求数=2(期望 2),reference 对应两张=true(req1=age/mvxlcn7h1t5f.png,req2=age/mvxla0k3rux0.png) | prompt 前缀+源词尾=true,串行间隔=2006ms(≥650=第2请求在第1应答后) | toast 进度 1/2、2/2=true,汇总「批量变体全部失败(2 张)」=true;toasts=[\"已删除 1 张\",\"已删除画板「AUDIT-B」，0 张图回到未分组\",\"已删除画板「AUDIT-C」，0 张图回到未分组\",\"批量变体 1/2\",\"批量变体 2/2\",\"批量变体全部失败（2 张）\"] | 变体 error 节点=2(期望 2,两张源图各 1 条,t43 清场)",
+    "domain": "batch"
+  },
+  {
+    "name": "43. 批量变体放行抽查",
+    "pass": true,
+    "evidence": "点选 A=true/B=true;放行请求 reference=age/mvxlcn7h1t5f.png(源 A=age/mvxlcn7h1t5f.png) | done 变体=mvxle0tt:parentId=源A=true,params.reference=源A.src=true,src=dataURL=true,prompt 尾接源词=true | B 的变体转 error=true,汇总 toast「1 张变体完成，1 张失败」=true;toasts=[\"批量变体 1/2\",\"批量变体 2/2\",\"批量变体全部失败（2 张）\",\"1 张变体完成，1 张失败\"] | 清场:done 变体删除=deleted,清除已失败后变体节点残留=0(期望 0),画布 error=0",
+    "domain": "batch"
+  },
+  {
+    "name": "44. 导出元数据默认",
+    "pass": true,
+    "evidence": "点「导出…」=true,面板在,格式=\"PNG（无损）\",「嵌入元数据」勾选=true(期望 true),可见=true,标签=\"嵌入元数据（提示词/参数到 PNG tEXt）\" | 清场:面板取消+灯箱关闭=true",
+    "domain": "export"
+  },
+  {
+    "name": "45. 等待预估均值样本",
+    "pass": true,
+    "evidence": "基线:localStorage snxAvgDur 旧值=\"[9,3023,319]\"(已清零;同套件 t41 放行生成可能已写入样本) | 第一发(拦截 3s 放行):节点=mvxle76l/done,snxAvgDur=[3012](期望长度≥1 且样本≥2500ms≈3s 墙钟) | 第二发:pending 悬浮卡出现=true,文案=\"生成中 · 0s · 预计 ~3s\"(期望含「预计 ~3s」;均值≈3000ms→3s) | 清场:A/B 删除=mvxle76l=deleted,mvxleapc=deleted,残留=0(期望 0)",
+    "domain": "wait"
+  },
+  {
+    "name": "46. 乱码清理核验",
+    "pass": true,
+    "evidence": "GET#1:total=10,乱码 done 节点=0 | GET#2(1.5s 后):total=10(与 #1 一致=true,本断言只读零写入),乱码 done 节点=0 | 清理本体为实现侧批次1 数据操作(SPEC-16 二:走 API+rev,改前备份快照),此处只核验共享画布结果",
+    "domain": "wait"
+  },
+  {
+    "name": "47. 画板最近使用排序",
+    "pass": true,
+    "evidence": "画板 AUDIT-A 就绪(本断言新建,id=mvxlegwqplmvw) | 基线:chips 序=[\"红灯笼系列\",\"mvxlegwqplmvw\"],AUDIT-A lastUsed=0(新建无 lastUsed,应沉底=末位) | 移入:右键菜单路径=ok,节点 boardId=A=true,AUDIT-A lastUsed=1793523194173(期望 >0=「最近一次有节点落入」刷新) | 移入后 chips 序=[\"AUDIT-A\",\"红灯笼系列\"](期望 AUDIT-A 首位) | 表单「目标画板」下拉选项=[\"跟随画廊:未分组\",\"未分组\",\"AUDIT-A\",\"红灯笼系列\",\"排序：最近使用（点击改为按名称）\"](期望 index2=AUDIT-A,即板选项首位) | 清场:图移回未分组=ok/boardId 已空,AUDIT-A chip 右键确认弹层标题三键校验=true,删板=deleted,余板=[\"红灯笼系列\",\"AUDIT-A\"]",
+    "domain": "asset"
+  },
+  {
+    "name": "48. 批量导出元数据",
+    "pass": true,
+    "evidence": "Ctrl+点选 A=true(💬 AUDIT-V14 回…),B=true(💬 AUDIT-V13 多…);批量条={\"计数\":\"2 张已选\",\"按钮\":\"批量导出\",\"禁用\":false} | download 事件=2(期望 2),文件名=[\"AUDIT-V14 回合尾折叠验收暮色湖面一叶小舟,远处灯-1.png\",\"AUDIT-V13 多图编号 B巷口狸猫-2.png\"] | PNG 校验=[{\"name\":\"AUDIT-V14 回合尾折叠验收暮色湖面一叶小舟,远处灯-1.png\",\"bytes\":11993,\"sig\":true,\"hasTxt\":true,\"crcOk\":true,\"idatOk\":true},{\"name\":\"AUDIT-V13 多图编号 B巷口狸猫-2.png\",\"bytes\":11949,\"sig\":true,\"hasTxt\":true,\"crcOk\":true,\"idatOk\":true}](期望各张 sig/hasTxt(sensenova tEXt)/crcOk/idatOk 全 true) | toast 进度 1/2、2/2=true,汇总「批量导出完成：2 张」=true;toasts=[\"已把 1 张移出画板\",\"已删除画板「AUDIT-A」，0 张图回到未分组\",\"批量导出 1/2\",\"批量导出 2/2\",\"批量导出完成：2 张（均含元数据）\"]",
+    "domain": "asset"
+  },
+  {
+    "name": "49. 审批门默认关",
+    "pass": true,
+    "evidence": "POST /config 关闸→200:ok(enabled=false),切队列页等 3.5s | 面板 .snx-appr=false,条目=0(期望 false/0)",
+    "domain": "tools"
+  },
+  {
+    "name": "50. 审批门拒绝路径",
+    "pass": true,
+    "evidence": "开闸→200:ok(enabled=true),写 pending(id=e2edeny01,ttl=120s) | 队列页条目出现=true:\"生成e2e 拒绝路径已等待 5s · 剩 115s 批准 拒绝\" | 点「拒绝」后状态文件:e2edeny01 status=denied reason=user(期望 denied/user)",
+    "domain": "tools"
+  },
+  {
+    "name": "51. 审批门超时路径",
+    "pass": true,
+    "evidence": "开闸→200:ok(enabled=true),写 pending(id=e2etimeout1,expiresAt=+11s) | 队列页条目出现=true | 等 13.5s 后:文件 status=expired reason=timeout,GET ?all=1 status=expired reason=timeout(期望双 expired/timeout) | 面板条目消失=true(2s pending-only 轮询刷新后),面板文案=\"待审批0审批门已开启 · 超时 120 秒暂无待审批请求。agent 调用生图 / 编辑 / 增强时会先停在这里，批准后才会调用 SenseNova。\"",
+    "domain": "tools"
+  },
+  {
+    "name": "52. 审批门决定协议",
+    "pass": true,
+    "evidence": "① POST 不存在 id(e2enotexst)→404 \"审批请求不存在或已清理\"(期望 404) | ② POST 非法 id(\"x/y/z\")→400,\"short!\"→400(期望 400/400) | ② 补充:合法 id 但缺 decision→400(期望 400) | ③ 预置 approved 重复 approve→200 idempotent=true;反向 deny→409(期望 200 true / 409);文件 status=approved",
+    "domain": "tools"
+  },
+  {
+    "name": "53. 工作台生成不受门控",
+    "pass": true,
+    "evidence": "开闸→200:ok(enabled=true),拦截 generate 200(mock 1×1 png):节点=mvxlfea9/status=done,等待期审批条目采样累计=0,审批文件 items=0(pending=0)",
+    "domain": "tools"
+  }
+]

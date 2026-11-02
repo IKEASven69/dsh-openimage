@@ -1,0 +1,63 @@
+{
+  "name": "dsh-openimage",
+  "version": "0.1.0",
+  "description": "OpenAI-compatible image-generation workbench for DeepSeek Harness with built-in SenseNova U1.5 support: infinite canvas, board gallery, queue governance, mask inpaint, tiled upscale",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./client": "./client/client-v4.js"
+  },
+  "files": [
+    "README.md",
+    "client",
+    "cordis.patch.yml",
+    "dist"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "esbuild src/index.ts --format=esm --packages=external --outfile=dist/index.js",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-scope": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-session": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-timeout": "^0.1.1-rc.2",
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "konva": "^9.3.22",
+    "zod": "^3.25.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1",
+    "@deepseek-ai/dsh-tools": ">=0.1.1-rc.2 <0.3.0-0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-tools": "0.1.1-rc.2",
+    "@types/node": "^26.1.2",
+    "tsup": "^8.5.1",
+    "typescript": "~5.8.3"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    }
+  }
+}

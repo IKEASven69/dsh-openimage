@@ -1,0 +1,9 @@
+﻿node_modules/
+*.log
+.env
+
+
+*.png
+dist/
+
+nul
