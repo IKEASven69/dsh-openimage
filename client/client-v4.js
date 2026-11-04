@@ -429,7 +429,7 @@ window.__ModuleLoader__.load({
   background:var(--dsw-alias-bg-layer-1,#232324);color:var(--dsw-alias-label-primary,#f9fafb);
   font-family:var(--dsw-font-family,"Segoe UI","Microsoft YaHei",sans-serif);overflow:hidden}
 .snx-cv-top{height:44px;flex-shrink:0;display:flex;align-items:center;gap:14px;padding:0 16px;
-  border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff1f);background:var(--dsw-alias-bg-layer-2,#2c2c2e)}
+  border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff1f);background:var(--dsw-alias-bg-base,#151517)}
 .snx-cv-top .brand{font-weight:900;font-size:14px;letter-spacing:.06em;color:var(--dsw-alias-label-primary,#f9fafb)}
 .snx-cv-top .brand b{color:var(--snx-accent)}
 .snx-cv-top .key{font-size:11px;padding:2px 9px;border-radius:9px;border:1px solid var(--dsw-alias-border-l2,#ffffff1f);color:var(--dsw-alias-label-tertiary,#adb2b8)}
@@ -439,7 +439,7 @@ window.__ModuleLoader__.load({
   cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s}
 .snx-cv-top button:hover{border-color:var(--snx-accent);color:var(--dsw-alias-label-primary,#f9fafb);background:color-mix(in srgb,var(--snx-accent) 10%,transparent)}
 .snx-cv-main{flex:1;display:flex;flex-direction:row;min-height:0;min-width:0}
-.snx-cv-wrap{flex:1;position:relative;overflow:hidden;background-color:var(--dsw-alias-bg-layer-1,#232324);
+.snx-cv-wrap{flex:1;position:relative;overflow:hidden;background-color:var(--dsw-alias-bg-base,#151517);
   background-image:radial-gradient(var(--dsw-alias-interactive-bg-hover,#ffffff14) 1px,transparent 1px);min-width:0}
 [data-snx-stage]{position:absolute;inset:0}
 /* 容器查询：rightbar < 720px 时改为竖排（画布在上，参数面板在下）
@@ -485,7 +485,7 @@ window.__ModuleLoader__.load({
   margin:0 0 4px;letter-spacing:.02em}
 .snx-cfg-hint{display:block;font-size:11.5px;color:var(--dsw-alias-label-tertiary,#adb2b8);margin:0 0 8px;line-height:1.5}
 input.snx-cfg-in{display:block;width:100%;box-sizing:border-box;
-  background:var(--dsw-alias-bg-module-platform,#353638)!important;border:1px solid var(--dsw-alias-border-l2,#ffffff1f);border-radius:7px;color:var(--dsw-alias-label-primary,#f9fafb)!important;
+  background:var(--dsw-alias-bg-layer-1,#232324)!important;border:1px solid var(--dsw-alias-border-l2,#ffffff1f);border-radius:7px;color:var(--dsw-alias-label-primary,#f9fafb)!important;
   padding:9px 12px;font-size:13px;font-family:inherit;outline:none;line-height:1.4;min-height:36px}
 input.snx-cfg-in:focus{border-color:var(--snx-accent);background:var(--dsw-alias-bg-layer-3,#353638)!important}
 .snx-cfg-in-wrap{position:relative}
@@ -599,7 +599,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
 /* ─── 根容器 ─── */
 .snx-pro{
   position:relative;display:flex;flex-direction:column;width:100%;height:100%;
-  background:var(--dsw-alias-bg-layer-1,#232324);
+  background:var(--dsw-alias-bg-base,#151517);
   color:var(--dsw-alias-label-primary,#f9fafb);font-family:var(--dsw-font-family,"Segoe UI","Microsoft YaHei",sans-serif);
   overflow:hidden;container-type:inline-size;container-name:snxpro;
 }
@@ -609,7 +609,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
 .snx-pro-top{
   height:46px;flex-shrink:0;display:flex;align-items:center;gap:10px;
   padding:0 14px;border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff1f);
-  background:var(--dsw-alias-bg-layer-2,#2c2c2e);
+  background:var(--dsw-alias-bg-base,#151517);
 }
 .snx-pro-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;letter-spacing:.02em}
 .snx-pro-ico{
@@ -633,7 +633,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
 
 /* ─── 模式 tab ─── */
 .snx-pro-tabs{
-  display:flex;flex-shrink:0;border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff1f);background:var(--dsw-alias-bg-layer-2,#2c2c2e);
+  display:flex;flex-shrink:0;border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff1f);background:var(--dsw-alias-bg-base,#151517);
   padding:0 6px;gap:2px;
 }
 .snx-pro-tabs button{
@@ -655,7 +655,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
 /* ─── 主内容 ─── */
 .snx-pro-main{
   flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
-  background:var(--dsw-alias-bg-layer-2,#2c2c2e);
+  background:var(--dsw-alias-bg-base,#151517);
 }
 .snx-pro-main::-webkit-scrollbar{width:6px}
 .snx-pro-main::-webkit-scrollbar-track{background:transparent}
@@ -884,7 +884,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
 .snx-gal-btn:hover{background:var(--dsw-alias-interactive-bg-hover,#ffffff14);color:var(--snx-error)}
 .snx-gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
 .snx-gal-item{
-  background:var(--dsw-alias-bg-module-platform,#353638);border:1px solid var(--dsw-alias-border-l2,#ffffff1f);border-radius:8px;overflow:hidden;
+  background:var(--dsw-alias-bg-layer-2,#2c2c2e);border:1px solid var(--dsw-alias-border-l2,#ffffff1f);border-radius:8px;overflow:hidden;
   cursor:pointer;transition:all .15s;
 }
 .snx-gal-item:hover{border-color:var(--snx-accent);transform:translateY(-1px);box-shadow:0 4px 14px color-mix(in srgb,var(--snx-accent) 20%,transparent)}
@@ -5061,7 +5061,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
       return h('div', { className: 'snx-tv' },
         h('div', { className: 'snx-tv-run snx-tv-wait' },
           h('span', { className: 'ring', 'aria-hidden': true }),
-          h('span', null, 'SenseNova 生成中 · 已 ', h('b', null, sec + 's'),
+          h('span', null, '生成中 · 已 ', h('b', null, sec + 's'),
             est > 0 ? ' · 预计 ~' + est + 's' : null),
         ),
         h('div', { className: 'snx-tv-ws' }, '完成后图片直接显示在这里，可回填参数 / 设为参考图 / 同参数重抽'),
@@ -5237,7 +5237,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
         if (this.state.err) {
           return h('div', { className: 'snx-cv' },
             h('div', { className: 'snx-cv-top' },
-              h('div', { className: 'brand' }, ic('zap'), ' SENSENOVA ', h('b', null, '生图工作台')),
+              h('div', { className: 'brand' }, ic('zap'), ' OPENIMAGE ', h('b', null, '生图工作台')),
               h('span', { className: 'key no' }, '渲染异常'),
             ),
             h('div', { className: 'snx-cv-main' },
@@ -5771,7 +5771,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
           const s = await get(STATUS_ROUTE).catch(() => ({}))
           setKeyOk(!!s.keyConfigured)
           // v13.1：POST 只对本会话生效;持久化已迁移到宿主设置页（profile 条目）
-          notify(r.persisted === false ? 'Key 已生效（本会话）；跨重启持久化请在宿主设置页的「SenseNova 生图」条目修改并保存' : 'Key 已保存并立即生效')
+          notify(r.persisted === false ? 'Key 已生效（本会话）；跨重启持久化请在宿主设置页的「OpenImage 生图」条目修改并保存' : 'Key 已保存并立即生效')
         } catch (e) { notify('保存失败：' + String((e && e.message) || e)) }
         finally { setKeySaving(false) }
       }
@@ -6388,13 +6388,13 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
         h('header', { className: 'snx-pro-top' },
           h('div', { className: 'snx-pro-brand' },
             h('span', { className: 'snx-pro-ico' }, ic('zap')),
-            h('span', { className: 'snx-pro-name' }, 'SenseNova'),
+            h('span', { className: 'snx-pro-name' }, 'OpenImage'),
             h('span', { className: 'snx-pro-tag' }, '生图工作台'),
           ),
           h('div', { className: 'snx-pro-spacer' }),
           h('span', {
             className: 'snx-pro-key ' + (keyOk === false ? 'no' : (keyOk ? 'ok' : 'unk')),
-            title: keyOk === null ? '检查中…' : keyOk ? 'SenseNova API Key 已配置' : '未配置 Key，到设置页配置',
+            title: keyOk === null ? '检查中…' : keyOk ? 'API Key 已配置（SenseNova 通道）' : '未配置 Key，到设置页配置',
           }, keyOk === null ? ic('clock', 12) : keyOk ? 'Key 已配置' : 'Key 未配置'),
         ),
         // ─── 模式 tab ───
@@ -6657,7 +6657,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
             // 空状态/忙时叠层
             busy ? h('div', { className: 'snx-gen-hero-busy' },
               h('div', { className: 'spin' }),
-              h('div', { className: 'lbl' }, 'SenseNova 生成中…'),
+              h('div', { className: 'lbl' }, '生成中…'),
             ) : null,
           ),
           // ── 提示词 + 控制 ──
@@ -8036,7 +8036,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
     function GenHeroEmpty({ busy }) {
       return h('div', { className: 'snx-gen-hero-empty' },
         h('div', { className: 'big' }, busy ? h('span', { className: 'snx-spinring' }) : ic('images')),
-        h('div', { className: 't1' }, busy ? 'SenseNova 生成中…' : '还没有生成图'),
+        h('div', { className: 't1' }, busy ? '生成中…' : '还没有生成图'),
         h('div', { className: 't2' }, busy ? '请稍等几秒' : '在下方输入提示词，或让 agent 帮你画'),
       )
     }
@@ -8956,7 +8956,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
             )),
           ),
           h('div', { className: 'snx-help-foot' },
-            'SenseNova 生图工作台 · v11',
+            'OpenImage 生图工作台 · v0.1',
           ),
         ),
       )
@@ -10210,7 +10210,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
         window.__snxDebug.hasLayout = !!(ctx.layout && ctx.layout.openRightbar)
         window.__snxDebug.step = 'settings-section'
         ctx.effect(() => ctx.slots.inject('settings.section', () =>
-          ctx.slots.register({ name: 'settings.section', id: 'dsh-openimage', order: 45, label: 'SenseNova 生图' }, ConfigCard)
+          ctx.slots.register({ name: 'settings.section', id: 'dsh-openimage', order: 45, label: 'OpenImage 生图' }, ConfigCard)
         ), 'sensenova-image: settings.section')
         window.__snxDebug.step = 'rb-tab-body'
         ctx.effect(() => {
@@ -10239,7 +10239,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
             ctx.slots.register({ name: 'sidebar.right.pane.tab.title', key: SNX_TAB_KEY },
               () => h('span', { className: 'snx-rb-title' },
                 h('span', { className: 'snx-rb-ico' }, ic('zap')),
-                'SenseNova 生图',
+                'OpenImage 生图',
               )))
         }, 'sensenova-image: sidebar.right.pane.tab.title')
         window.__snxDebug.tabTitleInject = true
@@ -10255,7 +10255,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
               bsb.registerTab({
                 id: 'dsh-openimage:workbench',
                 title: () => 'SenseNova 生图',
-                description: () => '商汤 U1.5 多模态生图工作台：并发队列 / 多参考图 / 画笔 / 全屏画布',
+                description: () => 'OpenImage 生图工作台：并发队列 / 多参考图 / 画笔 / 全屏画布',
                 icon: () => h('span', { className: 'snx-rb-ico' }, ic('zap')),
                 order: 60,
                 single: true,
@@ -10267,7 +10267,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
                 },
                 onOpen: (ctx2, scope) => {
                   try {
-                    if (window.__snxNotify) window.__snxNotify('已打开 SenseNova 生图工作台')
+                    if (window.__snxNotify) window.__snxNotify('已打开生图工作台')
                   } catch {}
                 },
               }), 'sensenova-image: bsb.tab'
@@ -10296,7 +10296,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
             ctx.slots.register({ name: 'sidebar.footer.action', id: 'dsh-openimage', order: 25 },
               () => h('button', {
                 className: 'snx-sidebtn',
-                title: 'SenseNova 生图工作台（在 dsh 右栏打开）',
+                title: 'OpenImage 生图工作台（在 dsh 右栏打开）',
                 onClick: () => {
                   try {
                     // 1) 打开/激活 sensenova-image tab（会自动展开右栏）
