@@ -48,6 +48,24 @@ export const Config = schemastery.object({
 
 export type Config = { apiKey?: string; baseUrl: string; model: string; timeoutMs: number; approvalGateEnabled: boolean; approvalTimeoutMs: number }
 
+// ——— volatile 引用解包（rc.5 启动链路实测，官方姿势见 dsh-agent-default-model：volatile 声明 + .get() 消费）———
+// dsh 0.2.1-rc.5 起插件 config 经 cordis resolveConfig 组装：live() 标了 meta.volatile 的字段
+// 不再是标量，而是 {get: fn} 热更新引用占位符（JSON.stringify 出来就是 {}）——直接进 schemasty
+// 校验必炸 $.apiKey expected string but got [object Object]。且 schemasty 校验的【输出】对
+// volatile 字段也会再包一层引用。故两端都解包成标量快照；占位符 .get() 取回真值
+// （patch 显式值与 schema 默认值都在）。热更新不受影响：POST /config 直接写内存 config。
+function unwrapVolatileConfig(raw: unknown): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries((raw ?? {}) as Record<string, unknown>)) {
+    let val: unknown = v
+    if (val && typeof val === 'object' && !Array.isArray(val) && typeof (val as { get?: unknown }).get === 'function') {
+      try { val = (val as { get: () => unknown }).get() } catch { val = undefined }
+    }
+    if (val !== undefined) out[k] = val
+  }
+  return out
+}
+
 // ——— 内部：OpenAI-compatible 调用 ———
 async function callChatCompletions(opts: {
   baseUrl: string
@@ -229,7 +247,10 @@ const syncSleepMs = (ms: number): void => {
 
 // ——— 插件 ———
 export function apply(ctx: Context, rawConfig: Config) {
-  const config = (Config as unknown as (v: unknown) => Config)(rawConfig ?? {})
+  const incoming = unwrapVolatileConfig(rawConfig)
+  const config = unwrapVolatileConfig(
+    (Config as unknown as (v: unknown) => Config)(incoming) as unknown as Record<string, unknown>
+  ) as unknown as Config
 
   // ——— 设置持久化（v16.1 重写）———
   // 0.2.1-alpha.2 的 settings 服务:configure(presentation, owner) 控制自动表单策略;
@@ -1140,12 +1161,20 @@ export function apply(ctx: Context, rawConfig: Config) {
   }), 'dsh-sensenova-image: /api/sensenova/image/')
 
   // konva 本体（本地 vendor，避免 CDN 依赖）
+  // rc.5 pnpm file: 安装是实体拷贝，插件目录下没有 node_modules——konva 被提升到
+  // profile 顶层 node_modules/konva；源仓 npm 开发布局则与 dist 同级。两布局都兜住。
   reg('/sensenova/vendor/konva.js', (_req, res) => {
-    try {
-      const p = join(dirname(fileURLToPath(import.meta.url)), '..', 'node_modules', 'konva', 'konva.min.js')
-      res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=86400' })
-      res.end(readFileSync(p))
-    } catch { sendJson(res, 500, { ok: false, error: 'konva 未安装：插件目录 npm i konva 后重启' }) }
+    const here = dirname(fileURLToPath(import.meta.url))
+    const candidates = [
+      join(here, '..', 'node_modules', 'konva', 'konva.min.js'),   // 源仓开发布局（dist 同级 node_modules）
+      join(here, '..', '..', 'konva', 'konva.min.js'),             // pnpm file: 拷贝布局（顶层 node_modules/konva）
+      join(here, '..', 'node_modules', 'konva', 'dist', 'konva.min.js'),
+    ]
+    let buf: Buffer | null = null
+    for (const p of candidates) { try { buf = readFileSync(p); break } catch { /* 试下一路径 */ } }
+    if (!buf) { sendJson(res, 500, { ok: false, error: 'konva 未安装：插件目录 npm i konva 后重启' }); return }
+    res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=86400' })
+    res.end(buf)
   })
 
   // （v4 不再单独挂静态页面：工作台直接在 dsh 侧栏里打开）
