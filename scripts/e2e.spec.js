@@ -3664,6 +3664,184 @@ async function main() {
     }
   }
 
+  // ══════════════ v20:P1-6 灵感库外部源(proxy 守卫 / 设置页全链路 / 灵感下拉回填)══════════════
+  // 0 外网依赖:本机自起 JSON 源(t54 用 :5302 自管自关;t55/t56 用常驻 :5301,main finally 关)。
+  // 54. 服务端代理守卫与拉取:①缺参 400 ②file:// 拒绝 ③正取 ok:text 含中文条目 ④POST 405。
+  async function t54_prompt_source_route(page) {
+    const steps = []
+    const P54_PORT = 5302
+    const payload = JSON.stringify([
+      { title: '赛博朋克夜城', prompt: 'cyberpunk night city, neon rain, 4k, cinematic', tags: ['scene'] },
+      { text: '水彩猫娘，柔和粉色，阳光', negative_prompt: 'lowres, ugly' },
+      'just a plain string prompt',
+      { noprompt: 'bad entry without prompt' },
+      42,
+    ])
+    const srv = http.createServer((req, res) => {
+      if (req.url === '/prompts.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(payload) } else { res.writeHead(404, { 'content-type': 'application/json' }); res.end('{"error":"not found"}') }
+    })
+    await new Promise((res) => srv.listen(P54_PORT, '127.0.0.1', res))
+    try {
+      const get = (q) => page.evaluate((u) => fetch('/api/sensenova/prompt-source' + u).then(async (r) => ({ status: r.status, body: await r.text() })), q)
+      const r1 = await get('')
+      const r2 = await get('?url=file:///c/windows/win.ini')
+      const r3 = await get('?url=' + encodeURIComponent('http://127.0.0.1:' + P54_PORT + '/prompts.json'))
+      const r4 = await page.evaluate(() => fetch('/api/sensenova/prompt-source', { method: 'POST' }).then(async (r) => ({ status: r.status, body: await r.text() })))
+      steps.push(
+        `缺参:${r1.status} ${r1.body.slice(0, 40)}(期望 400 含「缺少 url 参数」)`,
+        `file://${r2.status} ${r2.body.slice(0, 40)}(期望 400 含「仅允许 http(s)」)`,
+        `正取:${r3.status},ok=${r3.body.includes('"ok":true')},含中文条目=${r3.body.includes('赛博朋克夜城')}`,
+        `POST:${r4.status} ${r4.body.slice(0, 30)}(期望 405 GET only)`,
+      )
+      return {
+        pass: r1.status === 400 && r1.body.includes('缺少 url 参数')
+          && r2.status === 400 && r2.body.includes('仅允许 http(s)')
+          && r3.status === 200 && r3.body.includes('"ok":true') && r3.body.includes('赛博朋克夜城')
+          && r4.status === 405 && r4.body.includes('GET only'),
+        steps,
+      }
+    } finally { try { srv.close() } catch (e) { /* already closed */ } }
+  }
+  // 55. 设置页外部源全链路:添加→拉取(5 条目容错出 3)→坏 URL 404 后「刷新失败已保留缓存」
+  //     可见且好源不受影响→页面刷新后源仍在(localStorage 持久化);测后两源经 UI 删除
+  //     (应用内确认弹窗),localStorage 净变化为零。
+  async function t55_prompt_source_settings(page) {
+    const steps = []
+    if (!(await page.$('.snx-pro'))) await openWorkbench(page)
+    const gotoSettings = async () => {
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('.snx-pro-tabs button')]
+        const t = b[b.length - 1]   // 设置页签=最后一个图标钮(无文字,dbg 实证)
+        if (t) t.click()
+      })
+      await page.waitForTimeout(700)
+    }
+    await gotoSettings()
+    await page.waitForSelector('input[placeholder*="源名称"]', { timeout: 8000 })
+    const addSource = async (name, url) => {
+      await page.fill('input[placeholder*="源名称"]', name)
+      await page.fill('input[placeholder*="JSON 地址"]', url)
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find((x) => /添加并拉取/.test(x.textContent || ''))
+        if (b) b.click()
+      })
+      await page.waitForTimeout(2200)
+    }
+    const rowText = (nm) => page.evaluate((n) => {
+      const row = [...document.querySelectorAll('.snx-promptlib-item')].find((x) => x.textContent.includes(n))
+      return row ? row.textContent : ''
+    }, nm)
+    await addSource('测试源', 'http://127.0.0.1:5301/prompts.json')
+    const good1 = await rowText('测试源')
+    const okAdd = /3 条/.test(good1) && !/刷新失败/.test(good1)
+    steps.push(`添加并拉取:「${good1.slice(0, 60)}」(期望 3 条=5 条目容错出 3,无错误行)`)
+    await addSource('坏源', 'http://127.0.0.1:5301/nope.json')
+    const bad1 = await rowText('坏源')
+    const good2 = await rowText('测试源')
+    const okFail = /刷新失败已保留缓存/.test(bad1) && /404/.test(bad1)
+    const okIso = /3 条/.test(good2) && !/刷新失败/.test(good2)
+    steps.push(`坏源行:「${bad1.slice(0, 80)}」(期望 404 且含「刷新失败已保留缓存」)`, `好源行仍 3 条=${okIso}(不受坏源影响)`)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(2500)
+    if (!(await page.$('.snx-pro'))) await openWorkbench(page)
+    await gotoSettings()
+    const good3 = await rowText('测试源')
+    const okPersist = /3 条/.test(good3)
+    steps.push(`页面刷新后源仍在=${okPersist}「${good3.slice(0, 50)}」(localStorage 持久化)`)
+    // 清场:两源经 UI 删除(应用内确认),净变化为零
+    let leftover = 0
+    for (const nm of ['坏源', '测试源']) {
+      const gone = await page.evaluate(async (n) => {
+        const row = [...document.querySelectorAll('.snx-promptlib-item')].find((x) => x.textContent.includes(n))
+        if (!row) return true
+        const xb = [...row.querySelectorAll('button')].find((b) => (b.title || '') === '删除源')
+        if (!xb) return false
+        xb.click()
+        await new Promise((r) => setTimeout(r, 500))
+        const cf = document.querySelector('.snx-cfm-backdrop')
+        if (!cf) return false
+        const cb = [...cf.querySelectorAll('button')].find((b) => /删除/.test(b.textContent || ''))
+        if (cb) cb.click()
+        await new Promise((r) => setTimeout(r, 700))
+        return !([...document.querySelectorAll('.snx-promptlib-item')].some((x) => x.textContent.includes(n)))
+      }, nm)
+      if (!gone) leftover++
+    }
+    steps.push(`清场:两源 UI 删除,残留=${leftover}(期望 0)`)
+    return { pass: okAdd && okFail && okIso && okPersist && leftover === 0, steps }
+  }
+  // 56. 灵感下拉回填:localStorage 种子单源 3 条(生图表单挂载前写入)→「灵感 3」出词→
+  //     点选带 title 条目回填 prompt→点选带负面条目展开「高级」后负面词可见;测后清种子,
+  //     genPrefs 残留由后续轮次覆盖,画布零写入。
+  async function t56_prompt_source_inspire(page) {
+    const steps = []
+    await page.evaluate(() => {
+      localStorage.setItem('snx-prompt-sources-v1', JSON.stringify({ sources: [
+        { id: 'e2e-t56', name: '测试源', url: 'http://127.0.0.1:5301/prompts.json', enabled: true, cache: { fetchedAt: Date.now(), items: [
+          { title: '赛博朋克夜城', prompt: 'cyberpunk night city, neon rain, 4k, cinematic', tags: [] },
+          { prompt: '水彩猫娘，柔和粉色，阳光', negative: 'lowres, ugly' },
+          { prompt: 'plain third' },
+        ] } },
+      ] }))
+    })
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(2500)
+    if (!(await page.$('.snx-pro'))) await openWorkbench(page)
+    await switchTab(page, '生图')
+    const trig = await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('.snx-gen-form .snx-sel-btn')].find((b) => /灵感/.test(b.textContent))
+      if (!btn) return ''
+      btn.click()
+      return btn.textContent.trim()
+    })
+    await page.waitForTimeout(600)
+    const optPick = (kw) => page.evaluate((k) => {
+      const o = [...document.querySelectorAll('[role="option"]')].find((x) => x.textContent.includes(k))
+      if (!o) return false
+      o.click()
+      return true
+    }, kw)
+    const picked1 = await optPick('赛博朋克夜城')
+    await page.waitForTimeout(400)
+    const ta1 = await page.evaluate(() => { const t = document.querySelector('.snx-gen-ta'); return t ? t.value : '' })
+    await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('.snx-gen-form .snx-sel-btn')].find((b) => /灵感/.test(b.textContent))
+      if (btn) btn.click()
+    })
+    await page.waitForTimeout(600)
+    const picked2 = await optPick('水彩猫娘')
+    await page.waitForTimeout(400)
+    const ta2 = await page.evaluate(() => { const t = document.querySelector('.snx-gen-ta'); return t ? t.value : '' })
+    await page.evaluate(() => { const t = document.querySelector('.snx-gen-fneg-tg'); if (t) t.click() })
+    await page.waitForTimeout(400)
+    const neg = await page.evaluate(() => { const t = document.querySelector('.snx-gen-fneg-body textarea'); return t ? t.value : '' })
+    const trigOk = /灵感 3/.test(trig)
+    steps.push(
+      `触发钮:「${trig}」(期望「灵感 3」)=${trigOk}`,
+      `点选1 赛博朋克夜城=${picked1},回填=${ta1.includes('cyberpunk night city')}「${ta1.slice(0, 40)}」`,
+      `点选2 水彩猫娘=${picked2},回填=${ta2.includes('水彩猫娘')},负面词(高级区展开后)=${neg.includes('lowres')}「${neg.slice(0, 30)}」`,
+    )
+    await page.evaluate(() => localStorage.removeItem('snx-prompt-sources-v1'))
+    return { pass: trigOk && picked1 && ta1.includes('cyberpunk night city') && picked2 && ta2.includes('水彩猫娘') && neg.includes('lowres'), steps }
+  }
+  // v20 常驻 JSON 源(:5301,t55/t56 断言期在位;main finally 关闭)——t54 用 :5302 自管自关不冲突
+  let P16_SRV = null
+  const P16ensure = async () => {
+    if (P16_SRV) return
+    const payload = JSON.stringify([
+      { title: '赛博朋克夜城', prompt: 'cyberpunk night city, neon rain, 4k, cinematic', tags: ['scene'] },
+      { text: '水彩猫娘，柔和粉色，阳光', negative_prompt: 'lowres, ugly' },
+      'just a plain string prompt',
+      { noprompt: 'bad entry without prompt' },
+      42,
+    ])
+    P16_SRV = http.createServer((req, res) => {
+      if (req.url === '/prompts.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(payload) } else { res.writeHead(404, { 'content-type': 'application/json' }); res.end('{"error":"not found"}') }
+    })
+    await new Promise((res) => P16_SRV.listen(5301, '127.0.0.1', res))
+  }
+  await P16ensure()
+
   const tests = [
     ['实例加载', t01_load, 'p0'],
     ['宽度回归', t02_width, 'ui'],
@@ -3725,6 +3903,10 @@ async function main() {
     ['审批门超时路径', t51_gate_timeout, 'tools'],
     ['审批门决定协议', t52_gate_protocol, 'tools'],
     ['工作台生成不受门控', t53_workbench_not_gated, 'tools'],
+    // ── v20:灵感库外部源 3(代理守卫/设置页链路/灵感回填 ×promptsrc)──
+    ['灵感源代理守卫', t54_prompt_source_route, 'promptsrc'],
+    ['灵感源设置页链路', t55_prompt_source_settings, 'promptsrc'],
+    ['灵感下拉回填', t56_prompt_source_inspire, 'promptsrc'],
   ]
 
   // v13:对话轴环境(mock 上游 + config 原位换/还)——整个测试期生效;finally 保证还原
@@ -3783,6 +3965,7 @@ async function main() {
     process.stderr.write(`final canvas nodes: total=${fin.total} done=${fin.done} pending=${fin.pending} error=${fin.error}\n`)
   } finally {
     if (envReady) await chatEnvStop(origin)
+    if (P16_SRV) { try { P16_SRV.close() } catch (e) { /* already closed */ } }
     await browser.close().catch(() => {})
   }
   console.log(JSON.stringify(results, null, 2))

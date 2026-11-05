@@ -1880,6 +1880,8 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
   background:var(--dsw-alias-bg-module-platform,#353638);border:1px solid var(--dsw-alias-border-l2,#ffffff1f);border-radius:5px;
 }
 .snx-promptlib-item.star{border-color:color-mix(in srgb,var(--snx-warn) 30%,transparent);background:color-mix(in srgb,var(--snx-warn) 4%,transparent)}
+.snx-promptlib-item.off{opacity:.55}
+.snx-promptlib-x:disabled{opacity:.45;cursor:default}
 .snx-promptlib-pr{
   flex:1;min-width:0;font-size:11px;color:var(--dsw-alias-label-primary,#f9fafb);cursor:pointer;line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
@@ -3169,6 +3171,7 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
             reference: keepShortRef(effRefs[0] && effRefs[0].src),
             refs: effRefs.map((r) => ({ src: keepShortRef(r.src), role: r.role || 'reference', strength: r.strength ?? 0.7 })),
             upscale,
+            batch: n > 1 ? { index: i + 1, count: n } : undefined,   // P2-10 出生证：批量第几张/共几张（undefined 不落盘，单图不带）
           }, ts: Date.now(), _queuedAt: Date.now(),   // v12：入队时刻（队列详情耗时两段，ts 在 done 时会被完成时间覆盖）
         })
       }
@@ -4021,6 +4024,58 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
       promptLibCache = lib   // 写入即刷新缓存，读方零 localStorage 往返
       try { localStorage.setItem(PROMPT_LIB_KEY, JSON.stringify(lib)) } catch { }
       try { window.dispatchEvent(new CustomEvent('snx:promptLibChanged')) } catch { }
+    }
+    /* ── P1-6 灵感库外部源：host 代理拉取防 CSP/CORS；失败保留上次成功缓存（刷新不清空）──
+       存储 snx-prompt-sources-v1：{ sources: [{ id, name, url, enabled, lastOk, lastError,
+       cache: { items: [{ title?, prompt, negative?, tags? }], fetchedAt } }] }。
+       标准条目格式 [{ title?, prompt, negative?, tags?[] }]，解析容错：字符串条目/别名键
+       （text/negative_prompt/name）/非数组包装（items|prompts|data）都认，坏条目跳过不报错。── */
+    const PROMPT_SOURCES_KEY = 'snx-prompt-sources-v1'
+    let promptSourcesCache = null
+    function loadPromptSources() {
+      if (promptSourcesCache) return promptSourcesCache
+      try {
+        const raw = localStorage.getItem(PROMPT_SOURCES_KEY)
+        promptSourcesCache = raw ? JSON.parse(raw) : { sources: [] }
+      } catch { promptSourcesCache = { sources: [] } }   // 损坏/不可用 → 空源表，与 promptLib 同策略
+      if (!promptSourcesCache || !Array.isArray(promptSourcesCache.sources)) promptSourcesCache = { sources: [] }
+      return promptSourcesCache
+    }
+    function savePromptSources(s) {
+      promptSourcesCache = s
+      try { localStorage.setItem(PROMPT_SOURCES_KEY, JSON.stringify(s)) } catch { }
+      try { window.dispatchEvent(new CustomEvent('snx:promptSourcesChanged')) } catch { }   // 订阅方（生图表单灵感下拉/设置页）各自刷新
+    }
+    function parsePromptSource(text) {
+      let data
+      try { data = JSON.parse(text) } catch { return { items: [], bad: '内容不是合法 JSON' } }
+      const arr = Array.isArray(data) ? data : (data && typeof data === 'object' ? (data.items || data.prompts || data.data) : null)
+      if (!Array.isArray(arr)) return { items: [], bad: '顶层不是数组（也找不到 items/prompts/data 字段）' }
+      const items = []
+      for (const it of arr) {
+        if (typeof it === 'string' && it.trim()) { items.push({ prompt: it.trim().slice(0, 2000) }); continue }
+        if (it && typeof it === 'object') {
+          const p = String(it.prompt || it.text || '').trim()
+          if (!p) continue   // 坏条目跳过不报错（读端容错，对标 jsoncanvas 读端策略）
+          items.push({
+            prompt: p.slice(0, 2000),
+            negative: String(it.negative || it.negative_prompt || '').trim().slice(0, 1000) || undefined,
+            title: String(it.title || it.name || '').trim().slice(0, 60) || undefined,
+            tags: Array.isArray(it.tags) ? it.tags.filter((t) => typeof t === 'string').slice(0, 8) : undefined,
+          })
+        }
+      }
+      return { items, bad: items.length ? '' : '没有可用条目' }
+    }
+    async function fetchPromptSource(url) {   // → { ok, items? } | { ok:false, error }
+      try {
+        const r = await fetch('/api/sensenova/prompt-source?url=' + encodeURIComponent(url))
+        const j = await r.json().catch(() => ({}))
+        if (!j || !j.ok) return { ok: false, error: (j && j.error) || ('HTTP ' + r.status) }
+        const parsed = parsePromptSource(String(j.text || ''))
+        if (!parsed.items.length) return { ok: false, error: parsed.bad || '解析为空' }
+        return { ok: true, items: parsed.items }
+      } catch (e) { return { ok: false, error: '请求失败：' + ((e && e.message) || e) } }
     }
     function addRecent(p) {
       if (!p || !p.trim()) return
@@ -7899,6 +7954,37 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
       const [npName, setNpName] = useState('')
       const [npP, setNpP] = useState('')
       const [npN, setNpN] = useState('')
+      // P1-6：灵感库外部源——挂载读一次 + 订阅广播（同 P2-4 策略），busy 锁防并发重复拉取
+      const [srcLib, setSrcLib] = useState(() => loadPromptSources())
+      const [srcName, setSrcName] = useState('')
+      const [srcUrl, setSrcUrl] = useState('')
+      const [srcBusyId, setSrcBusyId] = useState('')
+      useEffect(() => {
+        const r = () => setSrcLib(Object.assign({}, loadPromptSources()))
+        window.addEventListener('snx:promptSourcesChanged', r)
+        return () => window.removeEventListener('snx:promptSourcesChanged', r)
+      }, [])
+      const refreshSource = async (id) => {
+        const cur = loadPromptSources().sources.find((x) => x.id === id)
+        if (!cur || srcBusyId) return
+        setSrcBusyId(id)
+        const r = await fetchPromptSource(cur.url)
+        const ss = loadPromptSources()
+        const s2 = ss.sources.find((x) => x.id === id)
+        if (!s2) { setSrcBusyId(''); return }   // 拉取途中被删除：结果丢弃
+        if (r.ok) {
+          s2.cache = { items: r.items, fetchedAt: Date.now() }
+          s2.lastOk = Date.now(); s2.lastError = ''
+          savePromptSources(ss)
+          notify && notify('「' + s2.name + '」拉取成功 ' + r.items.length + ' 条')
+        } else {
+          s2.lastError = String(r.error || '拉取失败')
+          savePromptSources(ss)   // 失败只记错误，cache 原样保留（失败不清空）
+          const kept = (s2.cache && s2.cache.items && s2.cache.items.length) || 0
+          notify && notify('「' + s2.name + '」刷新失败，已保留上次 ' + kept + ' 条缓存：' + s2.lastError, 'err')
+        }
+        setSrcBusyId('')
+      }
       const ask = confirm || (async (opts) => { notify && notify('确认弹窗不可用，已取消操作'); return false })   // P1-14：正常路径由 Workbench 注入 SnxConfirm
       const usePrompt = (p) => {
         // 同时写 genPrefs：GenForm 只在生图 tab 挂载，设置页里 dispatch 无人接收，
@@ -7968,6 +8054,51 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
               style: { justifyContent: 'center' },
             }, ic('save'), ' 保存预设'),
           ),
+          h('div', { className: 'snx-promptlib-h' }, ic('download'), ' 灵感库外部源（JSON）'),
+          (srcLib.sources || []).map((s) => h('div', { key: s.id, className: 'snx-promptlib-item' + (s.enabled === false ? ' off' : '') },
+            h('div', { style: { flex: 1, minWidth: 0 } },
+              h('div', { style: { fontSize: '11.5px', color: 'var(--dsw-alias-label-primary,#f9fafb)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
+                (s.enabled === false ? '（已停用）' : '') + s.name + ' · ' + ((s.cache && s.cache.items.length) || 0) + ' 条'),
+              h('div', { style: { fontSize: '10.5px', color: s.lastError ? 'var(--snx-warn,#e5a636)' : 'var(--dsw-alias-label-caption,#81858c)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, title: s.lastError ? s.lastError : s.url },
+                s.lastError ? '⚠ 刷新失败已保留缓存：' + s.lastError
+                  : (s.cache && s.cache.fetchedAt ? new Date(s.cache.fetchedAt).toLocaleString() : '未拉取') + ' · ' + String(s.url || '').replace(/^https?:\/\//, '').slice(0, 44)),
+            ),
+            h('button', { type: 'button', className: 'snx-promptlib-x', disabled: srcBusyId === s.id, onClick: () => { void refreshSource(s.id) }, title: '拉取/刷新（失败保留上次缓存）' }, srcBusyId === s.id ? ic('loader-circle', 12) : ic('rotate-ccw', 12)),
+            h('button', { type: 'button', className: 'snx-promptlib-x', onClick: () => { const ss = loadPromptSources(); const t = ss.sources.find((x) => x.id === s.id); if (t) { t.enabled = t.enabled === false; savePromptSources(ss) } }, title: s.enabled === false ? '启用' : '停用（缓存保留）' }, ic(s.enabled === false ? 'play' : 'pause', 12)),
+            h('button', { type: 'button', className: 'snx-promptlib-x', onClick: async () => {
+              const ok = await ask({ title: '删除灵感源「' + s.name + '」？', confirmLabel: '删除', confirmIcon: 'trash-2', desc: '只删源与它的缓存；收藏/最近/命名预设不受影响。' })
+              if (!ok) return
+              const ss = loadPromptSources(); ss.sources = ss.sources.filter((x) => x.id !== s.id); savePromptSources(ss)
+            }, title: '删除源' }, ic('x', 12)),
+          )),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' } },
+            h('input', {
+              placeholder: '源名称（如：人像摄影灵感）', value: srcName,
+              onChange: (e) => setSrcName(e.target.value),
+              style: { background: 'var(--dsw-alias-bg-module-platform,#353638)', border: '1px solid var(--dsw-alias-border-l2,#ffffff1f)', borderRadius: '6px', color: 'var(--dsw-alias-label-primary,#f9fafb)', padding: '6px 9px', fontSize: '11.5px', fontFamily: 'inherit' },
+            }),
+            h('input', {
+              placeholder: 'JSON 地址（https://…/prompts.json）', value: srcUrl,
+              onChange: (e) => setSrcUrl(e.target.value),
+              style: { background: 'var(--dsw-alias-bg-module-platform,#353638)', border: '1px solid var(--dsw-alias-border-l2,#ffffff1f)', borderRadius: '6px', color: 'var(--dsw-alias-label-primary,#f9fafb)', padding: '6px 9px', fontSize: '11.5px', fontFamily: 'inherit' },
+            }),
+            h('button', {
+              type: 'button',
+              className: 'snx-lb-adj-save',
+              disabled: !srcName.trim() || !srcUrl.trim() || !!srcBusyId,
+              onClick: async () => {
+                const ss = loadPromptSources()
+                const id = 'ps-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+                ss.sources.push({ id, name: srcName.trim().slice(0, 30), url: srcUrl.trim(), enabled: true, cache: { items: [], fetchedAt: 0 }, lastError: '' })
+                savePromptSources(ss)
+                setSrcName(''); setSrcUrl('')
+                notify && notify('源已添加，开始首次拉取…')
+                await refreshSource(id)
+              },
+              style: { justifyContent: 'center' },
+            }, ic('download'), ' 添加并拉取'),
+          ),
+          h('div', { className: 'snx-promptlib-empty' }, '标准格式：JSON 数组，条目为字符串或 {prompt, negative?, title?, tags?}；生图表单「灵感」下拉按源出词，刷新失败不清空上次缓存'),
           lib.stars.length ? h('div', { className: 'snx-promptlib-h' }, ic('star', 12), ' 收藏') : null,
           lib.stars.map((s) => h('div', { key: s.prompt, className: 'snx-promptlib-item star' },
             h('div', { className: 'snx-promptlib-pr', onClick: () => usePrompt(s.prompt), title: '点击填回提示词' }, s.prompt),
@@ -8148,6 +8279,24 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
         return () => window.removeEventListener('snx:promptLibChanged', refresh)
       }, [])
       const presets = lib.presets   // 命名预设（设置页维护；P2-12：空态也渲染入口）
+      // P1-6：灵感库外部源——挂载读一次 + 订阅 snx:promptSourcesChanged（同上方 P2-4 策略）；
+      // 每源最多出 40 条进下拉（防超大源撑爆弹层），点选整套回填 prompt+negative
+      const [srcLib, setSrcLib] = useState(() => loadPromptSources())
+      useEffect(() => {
+        const r = () => setSrcLib(Object.assign({}, loadPromptSources()))
+        window.addEventListener('snx:promptSourcesChanged', r)
+        return () => window.removeEventListener('snx:promptSourcesChanged', r)
+      }, [])
+      const inspItems = useMemo(() => {
+        const out = []
+        for (const s of (srcLib.sources || [])) {
+          if (s.enabled === false || !s.cache || !Array.isArray(s.cache.items)) continue
+          for (const it of s.cache.items.slice(0, 40)) {
+            out.push({ label: ((s.name || '源') + '·' + (it.title || it.prompt)).slice(0, 44), prompt: it.prompt, negative: it.negative })
+          }
+        }
+        return out
+      }, [srcLib])
       // 星标从缓存库按当前 prompt 派生，不再单独维护 state（同一提示词收藏态保持）
       const starred = useMemo(() => lib.stars.some((s) => s.prompt === String(prompt || '').trim()), [lib, prompt])
       // v8：从提示词库加载
@@ -8366,6 +8515,22 @@ canvas[data-snx-mask]{position:absolute;inset:0;z-index:8;cursor:crosshair}
                 onChange: (p) => { histExit(); setPrompt(p) },
                 options: [{ value: '', label: lib.recents.length ? '历史' : '暂无历史' }].concat(
                   lib.recents.map((p) => ({ value: p, label: p.length > 42 ? p.slice(0, 42) + '…' : p })),
+                ),
+              }),
+              // P1-6：灵感库外部源下拉——设置页·提示词库添加源后按源出词；选中回填正/负提示词
+              h(SnxSelect, {
+                value: '',
+                width: 88,
+                popWidth: 320,
+                title: '灵感库外部源（设置页·提示词库 可添加/刷新源；刷新失败自动保留上次缓存）',
+                onChange: (v) => {
+                  const it = inspItems[Number(v)]
+                  if (!it) return
+                  histExit(); setPrompt(it.prompt)
+                  if (it.negative) setNegPrompt(it.negative)
+                },
+                options: [{ value: '', label: inspItems.length ? '灵感 ' + inspItems.length : '灵感' }].concat(
+                  inspItems.map((it, i) => ({ value: String(i), label: it.label })),
                 ),
               }),
               h('span', { className: 'cnt' }, String(prompt.length) + ' / 2000'),

@@ -1183,6 +1183,33 @@ export function apply(ctx: Context, rawConfig: Config) {
     sendJson(res, 200, { ok: true, keyConfigured: Boolean(resolveKey(config)) })
   })
 
+  // P1-6 灵感库外部源：host 代理拉取——客户端运行在 dsh webview 里，CSP/CORS 不放行任意外域，
+  // 外部 JSON prompt 源统一由 server 侧拉取后转交。安全边界：仅 http(s)、15s 超时、2MB 上限。
+  // 有意不拦内网/环回地址：P2-18 自托管场景里用户源可能就在内网（LAN JSON 服务），且本路由
+  // 处在 dsh web token 门禁之后，调用者已持宿主凭据；scheme+超时+体积是本次收口的三条硬边界。
+  // 应答原文返回，解析与容错在客户端做（读端容错跳坏条目）。
+  reg('/api/sensenova/prompt-source', (req, res) => {
+    void (async () => {
+      if (req.method !== 'GET') { sendJson(res, 405, { ok: false, error: 'GET only' }); return }
+      let raw = ''
+      try { raw = new URL(req.url ?? '/', 'http://x').searchParams.get('url') ?? '' } catch { }
+      if (!raw) { sendJson(res, 400, { ok: false, error: '缺少 url 参数' }); return }
+      let target: URL
+      try { target = new URL(raw) } catch { sendJson(res, 400, { ok: false, error: 'url 无法解析' }); return }
+      if (target.protocol !== 'http:' && target.protocol !== 'https:') { sendJson(res, 400, { ok: false, error: '仅允许 http(s) 源' }); return }
+      try {
+        const r = await fetch(target.href, { signal: AbortSignal.timeout(15000), headers: { 'user-agent': 'dsh-openimage prompt-source/0.1' } })
+        const text = await r.text()
+        if (!r.ok) { sendJson(res, 502, { ok: false, error: '上游 HTTP ' + r.status }); return }
+        if (text.length > 2 * 1024 * 1024) { sendJson(res, 413, { ok: false, error: '源超过 2MB 上限' }); return }
+        sendJson(res, 200, { ok: true, text })
+      } catch (e) {
+        const msg = e && typeof e === 'object' && 'name' in e && (e as { name?: string }).name === 'TimeoutError' ? '拉取超时（15s）' : '拉取失败：' + (e instanceof Error ? e.message : String(e))
+        sendJson(res, 502, { ok: false, error: msg })
+      }
+    })()
+  })
+
   // SPEC-18 三：生成耗时统计——客户端无本地样本（对话轴首用）时的「预计 ~Xs」兜底数据源。
   // 样本来自 generate 路由 + 两个工具 execute 的成功应答墙钟（环形 5 条）。
   reg('/api/sensenova/stats', (req, res) => {
